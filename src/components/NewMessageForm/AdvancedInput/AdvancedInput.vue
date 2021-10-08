@@ -30,11 +30,12 @@
 		:allow-spaces="false"
 		@at="handleAtEvent">
 		<template #item="scope">
-			<Avatar v-if="isMentionToAll(scope.item.id)"
+			<Avatar v-if="isMentionToAll(scope.item.id) || isGroupMention(scope.item.source)"
 				:size="44"
 				:icon-class="'icon-group-forced-white'"
 				:disable-tooltip="true"
 				:disable-menu="true"
+				:show-user-status="false"
 				:is-no-user="true" />
 			<div v-else-if="isMentionToGuest(scope.item.id)"
 				class="avatar guest"
@@ -53,7 +54,15 @@
 
 			<span class="mention-suggestion">
 				<span>{{ scope.item.label }}</span>
-				<em v-if="getStatusMessage(scope.item)"
+				<em v-if="isGroupMention(scope.item.source)"
+					class="suggestion-info">
+					{{ t('spreed', 'Group') }}
+				</em>
+				<em v-else-if="isMentionToAll(scope.item.id)"
+					class="suggestion-info">
+					{{ t('spreed', 'Conversation') }}
+				</em>
+				<em v-else-if="getStatusMessage(scope.item)"
 					class="user-status">
 					{{ getStatusMessage(scope.item) }}
 				</em>
@@ -368,12 +377,17 @@ export default {
 			// Wrap mention ids with spaces in quotes.
 			possibleMentions.forEach(possibleMention => {
 				if (possibleMention.id.indexOf(' ') !== -1
-					|| possibleMention.id.indexOf('guest/') === 0) {
+					|| possibleMention.id.indexOf('guest/') === 0
+					|| possibleMention.id.indexOf('group/') === 0) {
 					possibleMention.id = '"' + possibleMention.id + '"'
 				}
 			})
 
 			this.autoCompleteMentionCandidates = possibleMentions
+		},
+
+		isGroupMention(mentionType) {
+			return mentionType === 'groups'
 		},
 
 		isMentionToAll(mentionId) {
@@ -405,6 +419,8 @@ export default {
 				return 'call'
 			} else if (this.isMentionToGuest(candidate.id)) {
 				return 'guest'
+			} else if (this.isGroupMention(candidate.source)) {
+				return 'group'
 			}
 
 			return 'user'
@@ -458,6 +474,13 @@ div[contenteditable] {
 	padding-left: 8px;
 
 	.user-status {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		display: block;
+		margin-top: 2px;
+	}
+
+	.suggestion-info {
 		overflow: hidden;
 		text-overflow: ellipsis;
 		display: block;
