@@ -232,10 +232,9 @@ export default {
 			const lastMessageTimestamp = this.item.lastMessage ? this.item.lastMessage.timestamp : 0
 
 			if (Object.keys(this.messages).length > 0) {
-				// FIXME: risky way to get last message that assumes that keys are always sorted
-				// should use this.$store.getters.messagesList instead ?
-				const messagesKeys = Object.keys(this.messages)
-				const lastMessageId = messagesKeys[messagesKeys.length - 1]
+
+				const messagesList = this.$store.getters.messagesList(this.item.token)
+				const lastMessageId = messagesList[messagesList.length - 1].id
 
 				/**
 				 * Only use the last message as lastmessage when:
