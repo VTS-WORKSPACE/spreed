@@ -158,6 +158,32 @@ class Listener {
 		$dispatcher->addListener(Room::EVENT_AFTER_PARTICIPANT_TYPE_SET, $listener);
 		$dispatcher->addListener(Room::EVENT_AFTER_PARTICIPANT_PERMISSIONS_SET, $listener);
 
+		$dispatcher->addListener(Room::EVENT_AFTER_PERMISSIONS_SET, static function (RoomEvent $event) {
+			if (self::isUsingInternalSignaling()) {
+				return;
+			}
+
+			/** @var BackendNotifier $notifier */
+			$notifier = \OC::$server->get(BackendNotifier::class);
+
+			$sessionIds = [];
+
+			// Setting the room permissions resets the permissions of all
+			// participants, even those with custom attendee permissions.
+
+			/** @var ParticipantService $participantService */
+			$participantService = \OC::$server->get(ParticipantService::class);
+			$participants = $participantService->getSessionsAndParticipantsForRoom($event->getRoom());
+			foreach ($participants as $participant) {
+				$session = $participant->getSession();
+				if ($session) {
+					$sessionIds[] = $session->getSessionId();
+				}
+			}
+
+			$notifier->participantsModified($event->getRoom(), $sessionIds);
+		});
+
 		$dispatcher->addListener(Room::EVENT_BEFORE_ROOM_DELETE, static function (RoomEvent $event) {
 			if (self::isUsingInternalSignaling()) {
 				return;
