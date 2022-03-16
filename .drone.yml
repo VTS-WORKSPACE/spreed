@@ -630,23 +630,19 @@ trigger:
   - push
 ---
 kind: pipeline
-name: int-mysql-callapi
+name: int-pgsql-callapi
 services:
 - image: ghcr.io/nextcloud/continuous-integration-redis:latest
   name: cache
-- command:
-  - --innodb_large_prefix=true
-  - --innodb_file_format=barracuda
-  - --innodb_file_per_table=true
-  environment:
-    MYSQL_DATABASE: oc_autotest
-    MYSQL_PASSWORD: owncloud
-    MYSQL_ROOT_PASSWORD: owncloud
-    MYSQL_USER: oc_autotest
-  image: ghcr.io/nextcloud/continuous-integration-mariadb-10.4:10.4
-  name: mysql
+- environment:
+    POSTGRES_DB: oc_autotest_dummy
+    POSTGRES_HOST_AUTH_METHOD: trust
+    POSTGRES_PASSWORD: owncloud
+    POSTGRES_USER: oc_autotest
+  image: ghcr.io/nextcloud/continuous-integration-postgres-13:postgres-13
+  name: pgsql
   tmpfs:
-  - /var/lib/mysql
+  - /var/lib/postgresql/data
 steps:
 - commands:
   - bash tests/drone-run-integration-tests.sh || exit 0
@@ -660,7 +656,7 @@ steps:
   environment:
     APP_NAME: spreed
     CORE_BRANCH: master
-    DATABASEHOST: mysql
+    DATABASEHOST: pgsql
   image: ghcr.io/nextcloud/continuous-integration-php8.0:latest
   name: integration-callapi
 trigger:

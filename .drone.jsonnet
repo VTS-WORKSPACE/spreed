@@ -126,8 +126,8 @@ local PipelinePostgreSQL(test_set) = Pipeline(
 	PipelineMySQL("reaction"),
 	PipelineMySQL("sharing"),
 	PipelineMySQL("sharing-2"),
-	PipelineMySQL("callapi"),
 
+	PipelinePostgreSQL("callapi"),
 	PipelinePostgreSQL("chat"),
 	PipelinePostgreSQL("command"),
 	PipelinePostgreSQL("conversation"),
