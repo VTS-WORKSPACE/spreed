@@ -4,7 +4,7 @@
 ## 3. Run: ./drone  jsonnet --stream --format yml
 ## 4. Commit the result
 
-local Pipeline(test_set, database, event_triggers, services) = {
+local Pipeline(test_set, database, services) = {
 	kind: "pipeline",
 	name: "int-"+database+"-"+test_set,
 	services: services,
@@ -15,6 +15,7 @@ local Pipeline(test_set, database, event_triggers, services) = {
 			environment: {
 				APP_NAME: "spreed",
 				CORE_BRANCH: "master",
+				GUESTS_BRANCH: "master",
 				DATABASEHOST: database
 			},
 			commands: [
@@ -23,6 +24,11 @@ local Pipeline(test_set, database, event_triggers, services) = {
 				"bash ./before_install.sh $APP_NAME $CORE_BRANCH $DATABASEHOST",
 				"cd ../server",
 				"./occ app:enable $APP_NAME",
+			] + (
+				if test_set == "conversation" || test_set == "conversation-2" then [
+					"git clone --depth 1 -b $GUESTS_BRANCH https://github.com/nextcloud/guests apps/guests"
+				] else []
+			) + [
 				"cd apps/$APP_NAME",
 				"cd tests/integration/",
 				"bash run.sh features/"+test_set
@@ -34,14 +40,15 @@ local Pipeline(test_set, database, event_triggers, services) = {
 			"master",
 			"stable*"
 		],
-		event: event_triggers
+		event: (
+			if database == "sqlite" then ["pull_request", "push"] else ["push"]
+		)
 	}
 };
 
 local PipelineSQLite(test_set) = Pipeline(
 	test_set,
 	"sqlite",
-	["pull_request", "push"],
 	[
 		{
 			name: "cache",
@@ -53,7 +60,6 @@ local PipelineSQLite(test_set) = Pipeline(
 local PipelineMySQL(test_set) = Pipeline(
 	test_set,
 	"mysql",
-	["pull_request", "push"],
 	[
 		{
 			name: "cache",
@@ -83,7 +89,6 @@ local PipelineMySQL(test_set) = Pipeline(
 local PipelinePostgreSQL(test_set) = Pipeline(
 	test_set,
 	"pgsql",
-	["pull_request", "push"],
 	[
 		{
 			name: "cache",
