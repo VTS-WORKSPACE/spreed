@@ -53,7 +53,7 @@ local PipelineSQLite(test_set) = Pipeline(
 local PipelineMySQL(test_set) = Pipeline(
 	test_set,
 	"mysql",
-	["push"],
+	["pull_request", "push"],
 	[
 		{
 			name: "cache",
@@ -83,7 +83,7 @@ local PipelineMySQL(test_set) = Pipeline(
 local PipelinePostgreSQL(test_set) = Pipeline(
 	test_set,
 	"pgsql",
-	["push"],
+	["pull_request", "push"],
 	[
 		{
 			name: "cache",
