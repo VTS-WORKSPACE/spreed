@@ -11,13 +11,11 @@ package_name=$(app_name)
 cert_dir=$(HOME)/.nextcloud/certificates
 version+=master
 
-all: dev-setup build-js-production
+all: dev-setup build-js-production 
 
 dev-setup: clean-dev npm-init
 
 dependabot: dev-setup npm-update build-js-production
-
-release: appstore create-tag
 
 build-js:
 	npm run dev
@@ -102,3 +100,6 @@ appstore:
 		echo "Signing package…"; \
 		openssl dgst -sha512 -sign $(cert_dir)/$(app_name).key $(build_dir)/$(app_name)-$(version).tar.gz | openssl base64; \
 	fi
+
+release:
+	zip -r release.zip . -x "node_modules/*" "tests/*" "vendor/*" ".github/*" ".git/*" "build/*"
